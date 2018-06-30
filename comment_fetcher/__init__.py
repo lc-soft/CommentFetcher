@@ -99,3 +99,5 @@ class CommentFetcher(object):
 
     def fetch(self, content):
         return self.scanner.scan(content)
+
+__version__ = '0.1.1'
