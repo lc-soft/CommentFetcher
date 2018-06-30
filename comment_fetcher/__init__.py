@@ -4,9 +4,12 @@ class Comment(object):
         self.start = start
         self.end = start if end is None else end
 
-    def __repr__(self):
-        return '<Comment start={0} end={1} length={2}>'\
-            .format(self.start, self.end, len(self.content))
+    def __str__(self):
+        lines = ['<Comment>']
+        num = '%{0}d'.format('%d' % len(str(self.end)))
+        for i, line in enumerate(self.content.split('\n')):
+            lines.append('{0} | {1}'.format(num % (i + self.start), line))
+        return '\n'.join(lines)
 
 class CommentScanner(object):
     def __init__(self, tokens, debug=False):
@@ -19,16 +22,17 @@ class CommentScanner(object):
     def dump(self, end_line=None):
         comment = None
         if self.buffer:
-            comment = Comment(''.join(self.buffer), self.picked_line, end_line)
+            comment = '\n'.join(self.buffer)
+            comment = Comment(comment, self.picked_line, end_line)
         self.buffer = []
         self.picked_line = None
         return comment
 
-    def print_line_log(self, line, i, description=''):
+    def print_line_log(self, line, line_num, description=''):
         if not self.debug:
             return
         mark = '' if self.picked_line is None else 'X'
-        print '%2d | %-80s | %s %s' % (i, line, mark, description)
+        print '%3d | %-80s | %s %s' % (line_num, line, mark, description)
 
     def scan_line_begin(self, line):
         for token in self.tokens:
@@ -53,6 +57,7 @@ class CommentScanner(object):
             if start >= 0:
                 content = content[start:]
                 self.picked_line = line_num
+                start = 0
             else:
                 self.print_line_log(line, line_num)
                 return None
@@ -90,6 +95,22 @@ class CommentFetcher(object):
             self.scanner = CommentScanner(params, debug)
 
     def fetch(self, content):
-        return self.scanner.scan(content)
+        comments = []
+        picked_comment = None
+        for comment in self.scanner.scan(content):
+            if not picked_comment:
+                picked_comment = comment
+                continue
+            if picked_comment:
+                if comment.start == picked_comment.end + 1:
+                    picked_comment.end = comment.end
+                    picked_comment.content += '\n' + comment.content
+                    continue
+                comments.append(picked_comment)
+                picked_comment = None
+            comments.append(comment)
+        if picked_comment:
+            comments.append(picked_comment)
+        return comments
 
-__version__ = '0.1.2'
+__version__ = '0.2.0'

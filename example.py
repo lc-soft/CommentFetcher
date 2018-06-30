@@ -33,6 +33,15 @@ int main() {
     return printf("hello, world!");
 }
 
+// test auto merge multiline comments
+// second line
+// third line
+// end comment
+
+// single line
+int add(int a, int b) {
+    return a + b;
+}
 '''
     }
 ]
@@ -41,7 +50,11 @@ def example():
     for test in tests:
         fetcher = CommentFetcher(test['language'], debug=True)
         print '\ntest for', test['language'], '\n'
-        fetcher.fetch(test['content'])
+        comments = fetcher.fetch(test['content'])
+        print '\n result:\n'
+        for cmt in comments:
+            print cmt
+            print '\n'
 
 if __name__ == '__main__':
     example()
