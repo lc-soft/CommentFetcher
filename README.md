@@ -6,7 +6,7 @@ A tool for collect code comments
 
 CommentFetcher is available on PyPI:
 
-    $ pip install github-flask
+    $ pip install CommentFetcher
 
 ## Usage
 
