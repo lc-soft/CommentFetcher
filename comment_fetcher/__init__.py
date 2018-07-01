@@ -19,10 +19,47 @@ class CommentScanner(object):
         self.picked_line = None
         self.debug = debug
 
+    def strip_spaces(self):
+        min_indent = 1
+        for line in self.buffer:
+            if len(line) > 0:
+                indent = len(line) - len(line.lstrip())
+                min_indent = min(min_indent, indent)
+        if min_indent > 0:
+            self.buffer = map(lambda x: x[min_indent:], self.buffer)
+
+    def strip(self):
+        buffer = []
+        if type(self.picked_token) is str or len(self.picked_token) < 3:
+            for line in self.buffer:
+                buffer.append(line.lstrip())
+            self.buffer = buffer
+            return
+        min_indent = 1
+        token = self.picked_token[2]
+        for line in self.buffer:
+            indent = line.find(token)
+            if indent < 0:
+                continue
+            spaces = line[:indent]
+            actual_indent = len(spaces) - len(spaces.lstrip())
+            min_indent = min(min_indent, actual_indent)
+        spaces = ' ' * min_indent
+        for line in self.buffer:
+            if spaces and line[:min_indent] == spaces:
+                line = line[min_indent:]
+            line = line.lstrip(token)
+            buffer.append(line)
+        self.buffer = buffer
+        self.strip_spaces()
+
     def dump(self, end_line=None):
         comment = None
         if self.buffer:
+            self.strip()
             comment = '\n'.join(self.buffer)
+            if len(self.buffer) < 2:
+                comment = comment.strip()
             comment = Comment(comment, self.picked_line, end_line)
         self.buffer = []
         self.picked_line = None
@@ -83,9 +120,21 @@ class CommentScanner(object):
 
 class CommentFetcher(object):
     scanner_params = {
-        'c': ['//', ('/*', '*/')],
-        'cpp': ['//', ('/*', '*/')],
-        'javascript': ['//', ('/*', '*/')],
+        'c': [
+            '//',
+            '///',
+            ('/**<', '*/', '*'),
+            ('/**', '*/', '*'),
+            ('/*', '*/', '*')
+        ],
+        'cpp': [
+            '//',
+            '///',
+            ('/**<', '*/', '*'),
+            ('/**', '*/', '*'),
+            ('/*', '*/', '*')
+        ],
+        'javascript': ['//', ('/*', '*/', '*')],
         'python': ['#', ('\'\'\'', '\'\'\''), ('\"\"\"', '\"\"\"')]
     }
 
@@ -113,4 +162,4 @@ class CommentFetcher(object):
             comments.append(picked_comment)
         return comments
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'

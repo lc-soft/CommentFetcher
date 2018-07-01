@@ -52,8 +52,8 @@ def example():
         print '\ntest for', test['language'], '\n'
         comments = fetcher.fetch(test['content'])
         print '\n result:\n'
-        for cmt in comments:
-            print cmt
+        for comment in comments:
+            print comment
             print '\n'
 
 if __name__ == '__main__':
