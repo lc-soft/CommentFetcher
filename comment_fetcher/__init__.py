@@ -32,10 +32,12 @@ class CommentScanner(object):
         buffer = []
         if type(self.picked_token) is str or len(self.picked_token) < 3:
             for line in self.buffer:
-                buffer.append(line.lstrip())
+                line = line.lstrip()
+                if line:
+                    buffer.append(line)
             self.buffer = buffer
             return
-        min_indent = 1
+        min_indent = -1
         token = self.picked_token[2]
         for line in self.buffer:
             indent = line.find(token)
@@ -43,13 +45,17 @@ class CommentScanner(object):
                 continue
             spaces = line[:indent]
             actual_indent = len(spaces) - len(spaces.lstrip())
-            min_indent = min(min_indent, actual_indent)
+            if min_indent == -1:
+                min_indent = actual_indent
+            else:
+                min_indent = min(min_indent, actual_indent)
         spaces = ' ' * min_indent
         for line in self.buffer:
             if spaces and line[:min_indent] == spaces:
                 line = line[min_indent:]
             line = line.lstrip(token)
-            buffer.append(line)
+            if line:
+                buffer.append(line)
         self.buffer = buffer
         self.strip_spaces()
 
@@ -121,20 +127,26 @@ class CommentScanner(object):
 class CommentFetcher(object):
     scanner_params = {
         'c': [
-            '//',
             '///',
+            '//',
             ('/**<', '*/', '*'),
             ('/**', '*/', '*'),
             ('/*', '*/', '*')
         ],
         'cpp': [
-            '//',
             '///',
+            '//',
             ('/**<', '*/', '*'),
             ('/**', '*/', '*'),
             ('/*', '*/', '*')
         ],
-        'javascript': ['//', ('/*', '*/', '*')],
+        'javascript': [
+            '///',
+            '//',
+            ('/**<', '*/', '*'),
+            ('/**', '*/', '*'),
+            ('/*', '*/', '*')
+        ],
         'python': ['#', ('\'\'\'', '\'\'\''), ('\"\"\"', '\"\"\"')]
     }
 
@@ -162,4 +174,4 @@ class CommentFetcher(object):
             comments.append(picked_comment)
         return comments
 
-__version__ = '0.3.0'
+__version__ = '0.3.2'

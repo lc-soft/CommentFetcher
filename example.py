@@ -33,6 +33,11 @@ int main() {
     return printf("hello, world!");
 }
 
+/**
+ * multiple comment
+ * multiple comment
+ */
+
 // test auto merge multiline comments
 // second line
 // third line
